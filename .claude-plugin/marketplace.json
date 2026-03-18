@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "cogloop",
+  "description": "Claude Code + GitHub native development workflow plugins",
+  "owner": {
+    "name": "Eduardo Caua",
+    "url": "https://github.com/eduardo-caua"
+  },
+  "plugins": [
+    {
+      "name": "specpilot",
+      "description": "Spec-driven development loop: refine tickets into specs, implement and ship — all from Claude Code chat",
+      "version": "1.0.0",
+      "author": {
+        "name": "Eduardo Caua",
+        "url": "https://github.com/eduardo-caua"
+      },
+      "source": "./plugins/specpilot",
+      "category": "development"
+    }
+  ]
+}

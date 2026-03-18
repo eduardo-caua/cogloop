@@ -1,29 +1,37 @@
+---
+name: implement
+description: Implement the next ticket from the Ready column and ship it. Use this when the user runs /implement or asks to implement, build, or ship the next ticket.
+argument-hint: "[--once] [--dry-run] [--from <step>]"
+allowed-tools: [Read, Write, Edit, Bash, Glob, Grep, WebFetch]
+---
+
 # /implement
 
 Implement the next ticket from the Ready column and ship it.
 
-## Flags
+## Arguments
 
-- `--once` — process one ticket then stop (default: ask after each ticket)
+`$ARGUMENTS` may contain:
+- `--once` — process one ticket then stop
 - `--dry-run` — show which ticket would be picked, do nothing
-- `--from <step>` — resume from a specific step (implement, review, test, ship, merge)
+- `--from <step>` — resume from a specific step: `implement`, `review`, `test`, `ship`, `merge`
 
 ## Steps
 
 ### 0. Load config
-Read `.specpilot.json` from the project root. If missing, tell the user to run `/cogloop-install` first and stop.
+Read `.specpilot.json` from the project root. If missing, tell the user to run `/specpilot-setup` first and stop.
 
 From config, identify:
-- **Spec repo/folder**: the entry with `role: "spec"` — read-only during implement, updated last
-- **Feature repos**: all entries with `role: "feature"` — these get implemented, tested, built, and shipped
-- Per repo: check `implement`, `test`, `build`, and `waitForCI` flags to know what to do
+- **Spec location**: the repo/folder with `role: "spec"` — read-only during implement, updated last
+- **Feature repos**: all repos with `role: "feature"` — implement, test, build, and ship these
+- Per repo: check `implement`, `test`, `build`, and `waitForCI` flags
 
 ### 1. Pick ticket
-- Query the GitHub Project for the next ticket in the **Ready** column
+- Query the GitHub Project for the next ticket in the **Ready** column: `gh project item-list <projectNumber> --owner <owner> --format json`
 - If `assignee` is set in config, filter by that assignee
 - If no tickets found, say "No tickets in Ready. All done!" and stop
 - If `--dry-run`, print the ticket title and stop
-- Move the ticket to the **In Progress** column
+- Move the ticket to **In Progress**
 
 ### 2. Read spec
 - Find the open PR (or branch) in the spec location for this ticket (e.g. branch `012-feature-name`)
@@ -38,10 +46,8 @@ For each feature repo (`role: "feature"`):
 
 ### 4. Implement
 Run `/speckit.implement <branch-name>` from `speckit.workspaceDir`.
-speckit reads the tasks and implements them across all feature repos.
-
-Only repos with `implement: true` (the default) receive code changes.
-Repos with `implement: false` still get a PR opened but no code changes are made by speckit.
+Only repos with `implement: true` (default) receive code changes.
+Repos with `implement: false` still get a PR but no speckit changes.
 
 ### 5. Code review
 Review changes in each feature repo for:
@@ -72,20 +78,20 @@ In the spec location:
 
 ### 9. Wait for CI
 For each open PR:
-- If `waitForCI: false` for that repo → skip, proceed to merge
-- If `waitForCI: true` → poll `gh pr checks` until all checks pass (timeout: 30 minutes)
+- If `waitForCI: false` → skip, proceed to merge
+- If `waitForCI: true` → poll `gh pr checks` until all checks pass (timeout: 30 min)
   - If checks fail → attempt to fix and push again (up to 2 attempts)
-  - If `gh pr checks` returns no checks → treat as pass and continue
-  - If still running after timeout → warn the user and ask: *"Wait longer or merge anyway?"*
+  - If no checks reported → treat as pass and continue
+  - If still running after timeout → ask: *"Wait longer or merge anyway?"*
 
 ### 10. Merge all PRs
-Merge feature repos first, then the spec location last:
+Merge feature repos first, then spec location last:
 - `gh pr merge <number> --squash --delete-branch`
 
-If the spec location is a folder inside the project (not a separate repo), commit and push directly to main instead of opening a PR.
+If spec is a folder inside the project (not a separate repo), commit and push directly to main instead.
 
 ### 11. Add comment to issue
-Post a comment on the GitHub Issue listing all merged PRs:
+Post a comment on the GitHub Issue:
 ```
 PRs merged:
 - [repo-name#N](url)
@@ -93,16 +99,15 @@ PRs merged:
 ```
 
 ### 12. Move ticket to Done
-Update the ticket status to **Done** in the GitHub Project.
+Update ticket status to **Done** in the GitHub Project.
 
 ### 13. Continue or stop
-- If `--once` flag was set, stop
+- If `--once`, stop
 - Otherwise ask: *"Implement next ticket? (yes/no)"*
-- If yes, go back to Step 1
-- If no, stop
+- If yes, go to Step 1. If no, stop.
 
 ## Error handling
 - If any step fails, report clearly with the step name and error
-- Do not move ticket to Done unless all PRs are merged
+- Do not move to Done unless all PRs are merged
 - On CI failure: attempt fix and repush before giving up
 - On merge conflict: pull latest main, rebase the feature branch, then retry

@@ -6,18 +6,21 @@ cogloop is a collection of installable plugins for [Claude Code](https://claude.
 
 ## How it works
 
-1. Browse the plugins below
-2. Copy the plugin's `install.md` into your project's `.claude/commands/` folder
-3. Run the install skill in Claude Code — it sets up everything else automatically
+1. Add cogloop as a marketplace in Claude Code
+2. Install the plugin you want
+3. Run the plugin's setup skill — it configures everything automatically
 
 ```bash
-# Example: installing specpilot
-cp plugins/specpilot/install.md your-project/.claude/commands/cogloop-install.md
+# Add the cogloop marketplace
+claude plugin marketplace add https://github.com/eduardo-caua/cogloop
+
+# Install a plugin
+claude plugin install specpilot
 ```
 
 Then in Claude Code:
 ```
-/cogloop-install
+/specpilot-setup
 ```
 
 ## Plugins

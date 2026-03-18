@@ -115,24 +115,27 @@ Create a GitHub Project with these columns (names are configurable):
 
 - `Todo` → `Refinement` → `Ready` → `In Progress` → `Done`
 
-### 2. Copy the install skill
+### 2. Add the cogloop marketplace
 
 ```bash
-mkdir -p .claude/commands
-curl -o .claude/commands/cogloop-install.md \
-  https://raw.githubusercontent.com/eduardo-caua/cogloop/main/plugins/specpilot/install.md
+claude plugin marketplace add https://github.com/eduardo-caua/cogloop
 ```
 
-### 3. Run the install skill in Claude Code
+### 3. Install specpilot
+
+```bash
+claude plugin install specpilot
+```
+
+### 4. Run setup in Claude Code
 
 ```
-/cogloop-install
+/specpilot-setup
 ```
 
-The install skill will:
+The setup skill will:
 - Walk you through config (GitHub project, repos, columns, models)
 - Auto-detect CI presence per repo and ask about `waitForCI`
-- Copy `/refine` and `/implement` skills into `.claude/commands/`
 - Write `.specpilot.json` to your project root
 - Update your `CLAUDE.md` with usage instructions
 

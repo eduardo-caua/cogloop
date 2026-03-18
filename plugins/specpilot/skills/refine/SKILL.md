@@ -1,0 +1,67 @@
+---
+name: refine
+description: Refine the next ticket from the Todo column using speckit. Use this when the user runs /refine or asks to refine, spec, or plan the next ticket.
+argument-hint: "[--once] [--dry-run]"
+allowed-tools: [Read, Write, Edit, Bash, Glob, Grep, WebFetch]
+---
+
+# /refine
+
+Refine the next ticket from the Todo column using speckit, then move it to Ready.
+
+## Arguments
+
+`$ARGUMENTS` may contain:
+- `--once` — process one ticket then stop
+- `--dry-run` — show which ticket would be picked, do nothing
+
+## Steps
+
+### 0. Load config
+Read `.specpilot.json` from the project root. If missing, tell the user to run `/specpilot-setup` first and stop.
+
+Identify:
+- The repo with `role: "spec"` → speckit writes artifacts here (`speckit.specsDir`)
+- `speckit.workspaceDir` → where speckit slash commands run from
+
+### 1. Pick ticket
+- Query the GitHub Project for the next ticket in the **Todo** column: `gh project item-list <projectNumber> --owner <owner> --format json`
+- If `assignee` is set in config, filter by that assignee
+- If no tickets found, say "No tickets in Todo. All done!" and stop
+- If `--dry-run`, print the ticket title and stop
+- Move the ticket to the **Refinement** column
+
+### 2. Run speckit in one session
+Run all four speckit commands sequentially from `speckit.workspaceDir`.
+
+**specify** → Read the ticket title and body from GitHub. Run `/speckit.specify` passing the full ticket description as input.
+
+**clarify** → Run `/speckit.clarify`. When clarify has questions:
+- Do NOT block waiting for terminal input
+- Surface each question here in chat as clear multiple-choice options
+- Wait for the user's answers
+- Encode answers back into the spec
+- Continue with plan and tasks
+
+**plan** → Run `/speckit.plan`
+
+**tasks** → Run `/speckit.tasks`
+
+### 3. Push spec branch and open PR
+In the spec location (`speckit.specsDir`):
+- The branch was created by speckit during specify (e.g. `012-feature-name`)
+- `git push origin <branch>`
+- If spec is a separate repo: `gh pr create --title "<ticket title>" --body "Spec for <ticket title>"`
+- Add the spec PR/branch link as a comment on the GitHub Issue
+
+### 4. Move ticket to Ready
+Update ticket status to **Ready** in the GitHub Project.
+
+### 5. Continue or stop
+- If `--once`, stop
+- Otherwise ask: *"Refine next ticket? (yes/no)"*
+- If yes, go to Step 1. If no, stop.
+
+## Error handling
+- If speckit fails at any step, report the error and stop — do not move to Ready
+- If the spec branch already exists, pull latest and continue from the last completed step
