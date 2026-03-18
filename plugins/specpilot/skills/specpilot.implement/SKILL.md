@@ -30,10 +30,12 @@ From config, identify:
 
 ### 1. Pick ticket
 - Query the GitHub Project for the next ticket in the **Ready** column: `gh project item-list <projectNumber> --owner <owner> --format json`
-- If `assignee` is set in config, filter by that assignee
+- Filter items where `status` exactly matches `config.statuses.ready` (read from `.specpilot.json` — do NOT hardcode "Ready" or any other string)
+- If `assignee` is set in config, additionally filter by that assignee
 - If no tickets found, say "No tickets in Ready. All done!" and stop
 - If `--dry-run`, print the ticket title and stop
-- Move the ticket to **In Progress**
+- Move the ticket to **In Progress** (use `config.statuses.inProgress` value)
+- Assign the ticket to `config.github.assignee` using `gh project item-edit` with the assignee field (if `assignee` is set in config)
 
 ### 2. Read spec
 - Find the open PR (or branch) in the spec location for this ticket (e.g. branch `012-feature-name`)
@@ -95,7 +97,8 @@ PRs merged:
 ```
 
 ### 11. Move ticket to Done
-Update ticket status to **Done** in the GitHub Project.
+- Update ticket status to the value of `config.statuses.done` in the GitHub Project
+- Ensure `config.github.assignee` is still assigned to the ticket
 
 ### 12. Continue or stop
 - If `--once`, stop

@@ -28,10 +28,12 @@ Identify:
 
 ### 1. Pick ticket
 - Query the GitHub Project for the next ticket in the **To do** column: `gh project item-list <projectNumber> --owner <owner> --format json`
-- If `assignee` is set in config, filter by that assignee
+- Filter items where `status` exactly matches `config.statuses.todo` (read from `.specpilot.json` — do NOT hardcode "Todo" or any other string; the actual value may contain spaces, e.g. "To do")
+- If `assignee` is set in config, additionally filter by that assignee
 - If no tickets found, say "No tickets in To do. All done!" and stop
 - If `--dry-run`, print the ticket title and stop
 - Move the ticket to the **Refinement** column
+- Assign the ticket to `config.github.assignee` using `gh project item-edit` with the assignee field (if `assignee` is set in config)
 
 ### 2. Run speckit in one session
 Run all four speckit commands sequentially from `speckit.workspaceDir`.
@@ -57,7 +59,8 @@ In the spec location (`speckit.specsDir`):
 - Add the spec PR/branch link as a comment on the GitHub Issue
 
 ### 4. Move ticket to Ready
-Update ticket status to **Ready** in the GitHub Project.
+- Update ticket status to the value of `config.statuses.ready` in the GitHub Project
+- Ensure `config.github.assignee` is still assigned to the ticket
 
 ### 5. Continue or stop
 - If `--once`, stop
