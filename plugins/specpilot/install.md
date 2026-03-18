@@ -27,7 +27,7 @@ Install the specpilot plugin into the current project.
    - Fetch `cogloop/plugins/specpilot/skills/implement.md` → `.claude/commands/implement.md`
 
    Fetch from: `https://raw.githubusercontent.com/eduardo-caua/cogloop/main/plugins/specpilot/skills/refine.md`
-   and: `https://raw.githubusercontent.com/eduardo-caua/cogloop/main/plugins/specpilot/skills/implement.md`
+   and `https://raw.githubusercontent.com/eduardo-caua/cogloop/main/plugins/specpilot/skills/implement.md`
 
 5. **Update CLAUDE.md** — append a `## specpilot` section explaining:
    - `/refine` — picks next Todo ticket, runs full spec cycle, moves to Ready
