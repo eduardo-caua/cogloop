@@ -4,6 +4,8 @@
 
 specpilot automates the full journey from GitHub ticket to merged PR using a spec-first methodology. It splits the work into two phases — **refine** (spec the ticket) and **implement** (build it) — each driven by a Claude Code slash command.
 
+Works with **existing projects** and **brand new projects** — the setup skill detects which situation you're in and guides you through the right flow.
+
 ## Stack requirements
 
 | Tool | Purpose |
@@ -38,6 +40,72 @@ Todo → Refinement → Ready → In Progress → Done
 6. Updates `tasks.md`, adds PR links to the issue
 7. Moves ticket to **Done**
 8. Asks: *"Implement next ticket?"*
+
+## Installation
+
+### 1. Install speckit
+
+speckit is a hard requirement — specpilot's `/refine` command uses it to generate specs, plans, and tasks.
+
+```bash
+claude plugin marketplace add <speckit-marketplace-url>
+claude plugin install speckit
+```
+
+### 2. Add the cogloop marketplace
+
+```bash
+claude plugin marketplace add https://github.com/eduardo-caua/cogloop
+```
+
+### 3. Install specpilot
+
+```bash
+claude plugin install specpilot
+```
+
+### 4. Run setup in Claude Code
+
+```
+/specpilot-setup
+```
+
+The setup skill detects your situation and runs one of two flows:
+
+---
+
+## Setup flows
+
+### Flow A — Existing project
+
+If you already have code repos and a constitution, setup runs in "guess-first" mode:
+
+1. Silently detects your GitHub owner, repos, spec location, CI setup, and project columns
+2. Presents a single summary of everything it found
+3. Asks once: *"Does this look right? Anything to change or add?"*
+4. Applies corrections, writes `.specpilot.json`, done
+
+No lengthy Q&A — one confirmation round and you're set up.
+
+If a constitution is missing, it will run `/speckit.constitution` inline before finishing.
+
+---
+
+### Flow B — New project
+
+If you're starting from scratch, setup acts as a project wizard:
+
+1. Asks: *"Tell me about what you're building"* — product description + any tech preferences
+2. Suggests an architecture in plain language (web app, API, database — no jargon)
+3. Asks how far to go:
+   - **Config only** — writes `.specpilot.json` and constitution, you handle the rest
+   - **Scaffold** — also creates folders and runs framework CLI tools
+   - **Everything** — scaffold + creates GitHub repos + sets up CI pipelines
+4. Runs `/speckit.constitution` to capture your project's conventions and standards
+5. Scaffolds and configures based on your chosen scope
+6. Writes `.specpilot.json` and you're ready to add tickets
+
+---
 
 ## Repo setup — flexible for any project shape
 
@@ -92,7 +160,7 @@ The default folder name is `spec/`. For separate repos, the convention is `<proj
 }
 ```
 
-**Five repos (monorepo-adjacent):**
+**Five repos (multi-repo):**
 ```json
 {
   "repos": [
@@ -106,38 +174,6 @@ The default folder name is `spec/`. For separate repos, the convention is `<proj
 ```
 
 > `implement: false` means speckit won't touch that repo — but a PR is still opened for any manual infrastructure changes.
-
-## Installation
-
-### 1. Set up your GitHub Project board
-
-Create a GitHub Project with these columns (names are configurable):
-
-- `Todo` → `Refinement` → `Ready` → `In Progress` → `Done`
-
-### 2. Add the cogloop marketplace
-
-```bash
-claude plugin marketplace add https://github.com/eduardo-caua/cogloop
-```
-
-### 3. Install specpilot
-
-```bash
-claude plugin install specpilot
-```
-
-### 4. Run setup in Claude Code
-
-```
-/specpilot-setup
-```
-
-The setup skill will:
-- Walk you through config (GitHub project, repos, columns, models)
-- Auto-detect CI presence per repo and ask about `waitForCI`
-- Write `.specpilot.json` to your project root
-- Update your `CLAUDE.md` with usage instructions
 
 ## Usage
 
@@ -156,5 +192,5 @@ The setup skill will:
 
 - Claude Code with appropriate tool permissions
 - `gh` CLI authenticated (`gh auth login`)
-- speckit installed and configured
+- speckit installed (`claude plugin install speckit`)
 - Git configured with push access to all repos

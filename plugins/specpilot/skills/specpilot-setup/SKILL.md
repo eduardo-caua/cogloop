@@ -9,74 +9,217 @@ allowed-tools: [Read, Write, Edit, Bash, Glob, WebFetch]
 
 Set up specpilot in the current project. Collects your project configuration and makes `/refine` and `/implement` ready to use.
 
-## Steps
+---
 
-### 0. Check prerequisites
-- Verify `gh` CLI is authenticated: run `gh auth status`. If not, stop and tell the user to run `gh auth login` first.
-- Verify Claude Code is running from the project root.
-- Create `.claude/commands/` if it doesn't exist.
+## Step 0 — Prerequisites (hard stop if any fail)
 
-### 1. Collect GitHub settings
-Ask the user:
-- GitHub owner (org or username) that owns the GitHub Project board
-- GitHub Project number (visible in the project URL: `github.com/orgs/<org>/projects/N` or `github.com/users/<user>/projects/N`)
-- GitHub username to filter tickets by assignee (optional — press Enter to skip)
+Run these checks silently before anything else:
 
-### 2. Locate the spec
-Ask: *"Is your spec in a separate repo or a folder inside this project?"*
+1. **gh CLI authenticated** — run `gh auth status`. If not authenticated, stop:
+   > "Please run `gh auth login` first, then re-run `/specpilot-setup`."
 
-- **Separate repo** → ask for the relative path (e.g. `../my-project-spec`). Default name convention: `<project-name>-spec`.
-- **Folder inside this project** → default to `./spec`. Create the folder if it doesn't exist.
+2. **speckit installed** — check that the following skills are available in this session:
+   `speckit.constitution`, `speckit.specify`, `speckit.clarify`, `speckit.plan`, `speckit.tasks`
+   If any are missing, stop:
+   > "speckit is required but not installed. Install it first:
+   > `claude plugin marketplace add github:anthropics/speckit`
+   > Then re-run `/specpilot-setup`."
 
-Then ask: *"Where should speckit slash commands run from?"* — this is the `workspaceDir`. Default: `.` (current project root). For multi-repo setups where a parent directory has the CLAUDE.md with speckit commands, use `..`.
+3. **Create `.claude/commands/`** if it doesn't exist.
 
-### 3. Collect repos
-Tell the user: *"Now let's add your feature repos — these are the repos where code gets implemented. Add as many as your project needs."*
+---
 
-For each repo, ask:
-- Name (used in PR titles and comments)
-- Relative path from the project root (e.g. `../my-api`, `../my-web`)
-- Should speckit implement code changes in this repo? (yes/no, default: yes)
-- Test command (e.g. `npm test`) — press Enter to skip
-- Build command (e.g. `npm run build`) — press Enter to skip
-- Check if `.github/workflows/` exists at that path. If yes, ask: *"Wait for CI before merging PRs in `<repo-name>`? (yes/no)"* — save as `waitForCI`. If no workflows folder, set `waitForCI: false` silently.
+## Step 1 — Silent detection
 
-Ask *"Add another repo? (yes/no)"* after each one.
+Detect the current project state to decide which flow to run:
 
-### 4. Collect column names
-Show defaults and ask to confirm or override:
-- Todo (default: `Todo`)
-- Refinement (default: `Refinement`)
-- Ready (default: `Ready`)
-- In Progress (default: `In Progress`)
-- Done (default: `Done`)
+- Run `git remote get-url origin` → infer GitHub owner and repo name
+- Check for existing code repos: subdirectories or siblings containing `package.json`, `pom.xml`, `go.mod`, `Cargo.toml`, or similar
+- Check for a constitution: `spec-kit/constitution.md`, `./spec/constitution.md`, or any `*constitution*` file under common spec folders
+- Check for an existing `.specpilot.json`
 
-Verify columns exist: `gh project field-list <projectNumber> --owner <owner> --format json`
-Warn if any column name doesn't match.
+**Route:**
+- If constitution exists AND at least one code repo detected → **Flow A (Existing project)**
+- Otherwise → **Flow B (New project)**
 
-### 5. Choose models
+Tell the user which flow you're running before proceeding.
+
+---
+
+## Flow A — Existing project
+
+### A1 — Guess everything, present once
+
+Detect silently:
+
+**GitHub:**
+- Owner from `git remote get-url origin`
+- Project number: look in `.specpilot.json`, `CLAUDE.md`, or `README.md` for hints. If not found, leave blank.
+- Assignee: run `gh api user --jq .login` → use as default
+
+**Spec location:**
+- Look for `spec-kit/`, `spec/`, or a sibling `*-spec` repo at `../`
+- Default `workspaceDir` to `.`; use `..` if `../CLAUDE.md` exists
+
+**Repos:**
+- List subfolders and `../` siblings with recognizable project structures
+- For each: detect test command from `package.json` scripts (`test`, `test:ci`), `Makefile`, `pom.xml`
+- Detect build command from `package.json` scripts (`build`)
+- Check `.github/workflows/` → default `waitForCI: true` if found
+
+**Columns:**
+- Run `gh project field-list <projectNumber> --owner <owner> --format json` if project number is known
+- Match to standard names. If project number unknown, default to: `Todo`, `Refinement`, `Ready`, `In Progress`, `Done`
+
+**Models:** default `claude-opus-4-6` / `claude-sonnet-4-6`
+
+### A2 — Present summary, ask once
+
+Show a formatted summary of everything detected. Example:
+
+---
+I detected this is an existing project. Here's what I found — let me know if anything needs changing:
+
+**GitHub**
+- Owner: `brivioapp`
+- Project number: `4`
+- Assignee filter: `eduardo-caua`
+
+**Spec**
+- Location: `./spec-kit` (folder inside this project)
+- speckit runs from: `.` (project root)
+
+**Repos**
+- `brivio-spec` → `../brivio-spec` (spec role, no CI)
+- `finance-api` → `./finance-api` (feature, test: `npm test`, build: `npm run build`, CI: yes)
+- `finance-web` → `./finance-web` (feature, test: `npm test`, build: `npm run build`, CI: yes)
+
+**Project columns**
+- To do → Refinement → Ready → In progress → Done
+
+**Models**
+- `/refine`: `claude-opus-4-6`
+- `/implement`: `claude-sonnet-4-6`
+
+Does this look right? Let me know anything you'd like to change or add.
+
+---
+
+Wait for the user's reply. Apply corrections if needed. Ask a single follow-up only if a correction is ambiguous.
+
+### A3 — Constitution check
+
+After confirmation, check if constitution exists:
+- If yes → continue to A4
+- If no → tell the user:
+  > "No constitution found. I'll run `/speckit.constitution` now to define your project's conventions — this helps `/refine` generate consistent, high-quality specs."
+  > Then invoke `/speckit.constitution` inline before continuing.
+
+### A4 — Write config and finish
+
+Write `.specpilot.json` and update `CLAUDE.md` (see schema below), then print the Done summary.
+
+---
+
+## Flow B — New project
+
+### B1 — Ask about the product
+
+Ask a single open question:
+
+> "Tell me about what you're building — what does it do, who is it for, and do you have any preferences on technology (language, framework, database)? If you're not sure about the tech, I'll suggest something."
+
+Wait for the user's answer.
+
+### B2 — Suggest architecture in plain language
+
+Based on the answer, suggest an architecture without using jargon. Frame it around what the user described, not technical terms. Example:
+
+> "Based on what you described, here's what I'd suggest:
+>
+> - A **web app** your users open in the browser (React)
+> - An **API** that handles the business logic and data (Node.js + NestJS)
+> - A **database** to store everything (PostgreSQL)
+>
+> These would live as two folders inside one project:
+> - `web/` — the browser app
+> - `api/` — the backend
+>
+> Does this sound right? You can change anything — the technology, the names, or the structure."
+
+Wait for confirmation or corrections. Apply changes if needed.
+
+### B3 — Ask how far to go
+
+> "How much do you want me to set up?
+>
+> **A) Just the config** — I'll write `.specpilot.json` and the project constitution. You handle the code setup yourself.
+> **B) Scaffold the project** — I'll also create the folders and run the framework CLI tools to generate starter code.
+> **C) Everything** — Scaffold + create GitHub repositories + set up CI pipelines for tests.
+>
+> Which sounds right? (A / B / C)"
+
+Wait for the user's choice.
+
+### B4 — GitHub project board
+
 Ask:
-- Model for `/refine` (spec phase) — default: `claude-opus-4-6`
-- Model for `/implement` (build phase) — default: `claude-sonnet-4-6`
+> "What's the name of your GitHub organization or username? And do you already have a GitHub Project board set up for this project, or should I create one?"
 
-### 6. Write `.specpilot.json`
-Write the collected config to `.specpilot.json` in the project root using this shape:
+- If board exists → ask for the project number
+- If not → run `gh project create --owner <owner> --title "<project name>"` and note the project number
+
+### B5 — Run speckit constitution
+
+> "Now let's define your project's conventions. I'll ask you a few questions about how you like to work — this guides everything that comes after."
+
+Invoke `/speckit.constitution` inline. This captures the product vision, coding conventions, and tech stack in detail.
+
+### B6 — Execute chosen scope (B or C only)
+
+**If B or C:**
+- Create project folder structure
+- Run appropriate CLI tools based on the chosen stack:
+  - React → `npx create-react-app <name>` or `npm create vite@latest <name>`
+  - NestJS → `npx @nestjs/cli new <name>`
+  - Next.js → `npx create-next-app <name>`
+  - Spring Boot → suggest `start.spring.io` or use `spring init`
+  - Other → use the standard CLI for the detected framework
+- Ask confirmation before running each CLI tool
+
+**If C (also):**
+- For each repo that doesn't exist on GitHub: ask *"Create `<repo-name>` on GitHub? (public/private)"* then run `gh repo create`
+- Generate GitHub Actions workflow files appropriate for the stack:
+  - Node/npm → workflow with `npm ci` + `npm test` + `npm run build`
+  - Java/Maven → workflow with `mvn test`
+  - Go → workflow with `go test ./...`
+  - Other → generate a sensible default based on the language
+- Commit and push initial scaffolding
+
+### B7 — Write config and finish
+
+Write `.specpilot.json` and update `CLAUDE.md` (see schema below), then print the Done summary.
+
+---
+
+## Config schema
+
+`.specpilot.json`:
 
 ```json
 {
   "github": { "owner": "...", "projectNumber": N, "assignee": "..." },
   "repos": [
     { "name": "my-spec", "path": "../my-spec", "role": "spec", "waitForCI": false },
-    { "name": "my-api",  "path": "../my-api",  "role": "feature", "implement": true, "test": "npm test", "build": "npm run build", "waitForCI": true }
+    { "name": "my-api",  "path": "./api",  "role": "feature", "implement": true, "test": "npm test", "build": "npm run build", "waitForCI": true }
   ],
-  "speckit": { "specsDir": "../my-spec", "workspaceDir": ".." },
+  "speckit": { "specsDir": "./spec-kit", "workspaceDir": "." },
   "statuses": { "todo": "Todo", "refinement": "Refinement", "ready": "Ready", "inProgress": "In Progress", "done": "Done" },
   "models": { "refine": "claude-opus-4-6", "implement": "claude-sonnet-4-6" }
 }
 ```
 
-### 7. Update CLAUDE.md
-Append a `## specpilot` section to `CLAUDE.md`:
+`CLAUDE.md` section to append (skip if `## specpilot` already exists):
 
 ```markdown
 ## specpilot
@@ -94,11 +237,14 @@ This project uses the [specpilot](https://github.com/eduardo-caua/cogloop) plugi
 See `.specpilot.json` in the project root.
 ```
 
-### 8. Done
-Print a summary:
+---
+
+## Done summary (both flows)
+
+Print:
 - Config written to `.specpilot.json`
 - Skills available: `/refine`, `/implement`
 - Spec location: `<specsDir>`
-- Feature repos: list each
+- Feature repos: list each with role and CI status
 - GitHub Project: `<owner>/#<projectNumber>`
 - Next step: add tickets to the **Todo** column and run `/refine`
