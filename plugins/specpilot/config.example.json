@@ -1,4 +1,5 @@
 {
+  "_comment": "Example config for a project with a separate spec repo, one backend, and one frontend.",
   "github": {
     "owner": "your-org-or-username",
     "projectNumber": 1,
@@ -6,26 +7,28 @@
   },
   "repos": [
     {
+      "name": "my-spec",
+      "path": "../my-spec",
+      "role": "spec",
+      "waitForCI": false
+    },
+    {
       "name": "my-api",
       "path": "../my-api",
-      "type": "backend",
-      "testCommand": "npm test",
-      "buildCommand": "npm run build",
+      "role": "feature",
+      "implement": true,
+      "test": "npm test",
+      "build": "npm run build",
       "waitForCI": true
     },
     {
       "name": "my-web",
       "path": "../my-web",
-      "type": "frontend",
-      "testCommand": "npm test",
-      "buildCommand": "npm run build",
+      "role": "feature",
+      "implement": true,
+      "test": "npm test",
+      "build": "npm run build",
       "waitForCI": true
-    },
-    {
-      "name": "my-spec",
-      "path": "../my-spec",
-      "type": "spec",
-      "waitForCI": false
     }
   ],
   "speckit": {
