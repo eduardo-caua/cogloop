@@ -67,7 +67,7 @@ claude plugin install specpilot
 ### 4. Run setup in Claude Code
 
 ```
-/specpilot-setup
+/specpilot.setup
 ```
 
 The setup skill detects your situation and runs one of two flows:
@@ -178,14 +178,21 @@ The default folder name is `spec/`. For separate repos, the convention is `<proj
 ## Usage
 
 ```
-/refine              # Refine next Todo ticket, ask after each
-/refine --once       # Refine one ticket then stop
-/refine --dry-run    # Show which ticket would be picked, do nothing
+# Board-first: pick from To do column
+/specpilot.refine              # Refine next To do ticket, ask after each
+/specpilot.refine --once       # Refine one ticket then stop
+/specpilot.refine --dry-run    # Show which ticket would be picked, do nothing
 
-/implement              # Implement next Ready ticket, ask after each
-/implement --once       # Implement one ticket then stop
-/implement --dry-run    # Show which ticket would be picked, do nothing
-/implement --from test  # Resume from the test step
+# Spec-first: start from an idea, create the ticket
+/specpilot.specify                        # Describe a feature, create ticket in Ready
+/specpilot.specify "add dark mode"        # Pass description inline
+/specpilot.specify --dry-run              # Preview ticket without creating it
+
+# Implement: works with tickets from either flow
+/specpilot.implement              # Implement next Ready ticket, ask after each
+/specpilot.implement --once       # Implement one ticket then stop
+/specpilot.implement --dry-run    # Show which ticket would be picked, do nothing
+/specpilot.implement --from test  # Resume from the test step
 ```
 
 ## Requirements

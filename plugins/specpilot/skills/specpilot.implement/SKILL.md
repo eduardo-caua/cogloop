@@ -1,13 +1,15 @@
 ---
-name: implement
-description: Implement the next ticket from the Ready column and ship it. Use this when the user runs /implement or asks to implement, build, or ship the next ticket.
+name: specpilot.implement
+description: Implement the next ticket from the Ready column and ship it. Use this when the user runs /specpilot.implement or asks to implement, build, or ship the next ticket.
 argument-hint: "[--once] [--dry-run] [--from <step>]"
 allowed-tools: [Read, Write, Edit, Bash, Glob, Grep, WebFetch]
 ---
 
-# /implement
+# /specpilot.implement
 
-Implement the next ticket from the Ready column and ship it.
+Implement the next ticket from the **Ready** column and ship it.
+
+> Works with tickets created by either `/specpilot.refine` (board-first) or `/specpilot.specify` (spec-first) — both land in **Ready** with a linked spec branch.
 
 ## Arguments
 
@@ -19,10 +21,10 @@ Implement the next ticket from the Ready column and ship it.
 ## Steps
 
 ### 0. Load config
-Read `.specpilot.json` from the project root. If missing, tell the user to run `/specpilot-setup` first and stop.
+Read `.specpilot.json` from the project root. If missing, tell the user to run `/specpilot.setup` first and stop.
 
 From config, identify:
-- **Spec location**: the repo/folder with `role: "spec"` — read-only during implement, updated last
+- **Spec location**: the repo/folder with `role: "spec"` — read-only during implement
 - **Feature repos**: all repos with `role: "feature"` — implement, test, build, and ship these
 - Per repo: check `implement`, `test`, `build`, and `waitForCI` flags
 
@@ -70,13 +72,7 @@ For each feature repo with changes:
 - `git push origin <branch-name>`
 - `gh pr create --title "<ticket title>" --body "Closes #<issue-number>"`
 
-### 8. Update tasks.md
-In the spec location:
-- Check off completed tasks in `tasks.md`
-- `git add tasks.md && git commit -m "Mark tasks complete: <ticket title>"`
-- `git push origin <branch-name>`
-
-### 9. Wait for CI
+### 8. Wait for CI
 For each open PR:
 - If `waitForCI: false` → skip, proceed to merge
 - If `waitForCI: true` → poll `gh pr checks` until all checks pass (timeout: 30 min)
@@ -84,13 +80,13 @@ For each open PR:
   - If no checks reported → treat as pass and continue
   - If still running after timeout → ask: *"Wait longer or merge anyway?"*
 
-### 10. Merge all PRs
+### 9. Merge all PRs
 Merge feature repos first, then spec location last:
 - `gh pr merge <number> --squash --delete-branch`
 
 If spec is a folder inside the project (not a separate repo), commit and push directly to main instead.
 
-### 11. Add comment to issue
+### 10. Add comment to issue
 Post a comment on the GitHub Issue:
 ```
 PRs merged:
@@ -98,10 +94,10 @@ PRs merged:
 - [spec-repo#N](url)
 ```
 
-### 12. Move ticket to Done
+### 11. Move ticket to Done
 Update ticket status to **Done** in the GitHub Project.
 
-### 13. Continue or stop
+### 12. Continue or stop
 - If `--once`, stop
 - Otherwise ask: *"Implement next ticket? (yes/no)"*
 - If yes, go to Step 1. If no, stop.

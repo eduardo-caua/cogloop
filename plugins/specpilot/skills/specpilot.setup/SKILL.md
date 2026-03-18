@@ -1,13 +1,13 @@
 ---
-name: specpilot-setup
-description: Set up the specpilot plugin in the current project. Use this when the user runs /specpilot-setup or asks to install, configure, or set up specpilot.
+name: specpilot.setup
+description: Set up the specpilot plugin in the current project. Use this when the user runs /specpilot.setup or asks to install, configure, or set up specpilot.
 argument-hint: (no arguments needed)
 allowed-tools: [Read, Write, Edit, Bash, Glob, WebFetch]
 ---
 
-# /specpilot-setup
+# /specpilot.setup
 
-Set up specpilot in the current project. Collects your project configuration and makes `/refine` and `/implement` ready to use.
+Set up specpilot in the current project. Collects your project configuration and makes `/specpilot.refine`, `/specpilot.specify`, and `/specpilot.implement` ready to use.
 
 ---
 
@@ -16,14 +16,14 @@ Set up specpilot in the current project. Collects your project configuration and
 Run these checks silently before anything else:
 
 1. **gh CLI authenticated** — run `gh auth status`. If not authenticated, stop:
-   > "Please run `gh auth login` first, then re-run `/specpilot-setup`."
+   > "Please run `gh auth login` first, then re-run `/specpilot.setup`."
 
 2. **speckit installed** — check that the following skills are available in this session:
    `speckit.constitution`, `speckit.specify`, `speckit.clarify`, `speckit.plan`, `speckit.tasks`
    If any are missing, stop:
    > "speckit is required but not installed. Install it first:
    > `claude plugin marketplace add github:anthropics/speckit`
-   > Then re-run `/specpilot-setup`."
+   > Then re-run `/specpilot.setup`."
 
 3. **Create `.claude/commands/`** if it doesn't exist.
 
@@ -227,8 +227,9 @@ Write `.specpilot.json` and update `CLAUDE.md` (see schema below), then print th
 This project uses the [specpilot](https://github.com/eduardo-caua/cogloop) plugin.
 
 ### Commands
-- `/refine` — picks next Todo ticket, runs specify→clarify→plan→tasks, moves to Ready
-- `/implement` — picks next Ready ticket, implements→tests→ships, moves to Done
+- `/specpilot.refine` — picks next To do ticket from the board, runs speckit, moves to Ready
+- `/specpilot.specify` — start from a feature idea, runs speckit, creates ticket in Ready
+- `/specpilot.implement` — picks next Ready ticket, implements→tests→ships, moves to Done
 
 ### Flags
 `--once` (one ticket then stop), `--dry-run` (preview only)
@@ -243,8 +244,10 @@ See `.specpilot.json` in the project root.
 
 Print:
 - Config written to `.specpilot.json`
-- Skills available: `/refine`, `/implement`
+- Skills available: `/specpilot.refine`, `/specpilot.specify`, `/specpilot.implement`
 - Spec location: `<specsDir>`
 - Feature repos: list each with role and CI status
 - GitHub Project: `<owner>/#<projectNumber>`
-- Next step: add tickets to the **Todo** column and run `/refine`
+- Next step:
+  - Board-first: add tickets to the **To do** column and run `/specpilot.refine`
+  - Spec-first: run `/specpilot.specify` and describe what you want to build

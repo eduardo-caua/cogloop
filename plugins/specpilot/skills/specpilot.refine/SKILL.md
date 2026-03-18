@@ -1,13 +1,15 @@
 ---
-name: refine
-description: Refine the next ticket from the Todo column using speckit. Use this when the user runs /refine or asks to refine, spec, or plan the next ticket.
+name: specpilot.refine
+description: Refine the next ticket from the Todo column using speckit. Use this when the user runs /specpilot.refine or asks to refine, spec, or plan the next ticket from the board.
 argument-hint: "[--once] [--dry-run]"
 allowed-tools: [Read, Write, Edit, Bash, Glob, Grep, WebFetch]
 ---
 
-# /refine
+# /specpilot.refine
 
-Refine the next ticket from the Todo column using speckit, then move it to Ready.
+Pick the next ticket from the **To do** column, run it through speckit, and move it to **Ready**.
+
+> Board-first flow: the ticket already exists on the GitHub Project board. Use `/specpilot.specify` instead if you want to start from a feature idea and create the ticket automatically.
 
 ## Arguments
 
@@ -18,16 +20,16 @@ Refine the next ticket from the Todo column using speckit, then move it to Ready
 ## Steps
 
 ### 0. Load config
-Read `.specpilot.json` from the project root. If missing, tell the user to run `/specpilot-setup` first and stop.
+Read `.specpilot.json` from the project root. If missing, tell the user to run `/specpilot.setup` first and stop.
 
 Identify:
 - The repo with `role: "spec"` → speckit writes artifacts here (`speckit.specsDir`)
 - `speckit.workspaceDir` → where speckit slash commands run from
 
 ### 1. Pick ticket
-- Query the GitHub Project for the next ticket in the **Todo** column: `gh project item-list <projectNumber> --owner <owner> --format json`
+- Query the GitHub Project for the next ticket in the **To do** column: `gh project item-list <projectNumber> --owner <owner> --format json`
 - If `assignee` is set in config, filter by that assignee
-- If no tickets found, say "No tickets in Todo. All done!" and stop
+- If no tickets found, say "No tickets in To do. All done!" and stop
 - If `--dry-run`, print the ticket title and stop
 - Move the ticket to the **Refinement** column
 
