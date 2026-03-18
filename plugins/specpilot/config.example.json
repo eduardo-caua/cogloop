@@ -10,19 +10,22 @@
       "path": "../my-api",
       "type": "backend",
       "testCommand": "npm test",
-      "buildCommand": "npm run build"
+      "buildCommand": "npm run build",
+      "waitForCI": true
     },
     {
       "name": "my-web",
       "path": "../my-web",
       "type": "frontend",
       "testCommand": "npm test",
-      "buildCommand": "npm run build"
+      "buildCommand": "npm run build",
+      "waitForCI": true
     },
     {
       "name": "my-spec",
       "path": "../my-spec",
-      "type": "spec"
+      "type": "spec",
+      "waitForCI": false
     }
   ],
   "speckit": {

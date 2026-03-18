@@ -63,8 +63,12 @@ In the spec repo:
 - `git push origin <branch-name>`
 
 ### 9. Wait for CI
-For each open PR, poll `gh pr checks` until all checks pass (or timeout after 30 minutes).
-If checks fail, attempt to fix and push again (up to 2 attempts).
+For each open PR:
+- If `waitForCI: false` for that repo → skip, proceed to merge
+- If `waitForCI: true` → poll `gh pr checks` until all checks pass (timeout after 30 minutes)
+  - If checks fail, attempt to fix and push again (up to 2 attempts)
+  - If `gh pr checks` returns no checks at all (repo has no CI configured), treat as pass and continue
+  - If checks are still running after timeout, warn the user and ask whether to wait longer or merge anyway
 
 ### 10. Merge all PRs
 Merge in this order: feature repos first, then spec repo.

@@ -14,6 +14,7 @@ Install the specpilot plugin into the current project.
    - GitHub Project number (visible in the project URL: `/projects/N`)
    - GitHub username to filter tickets by assignee (optional, press Enter to skip)
    - For each repo involved: name, relative path from project root, type (frontend/backend/spec), test command, build command
+   - For each repo, check if `.github/workflows/` exists in that path. If it does, ask: *"Wait for CI checks to pass before merging PRs in `<repo-name>`? (yes/no)"* — save as `waitForCI`. If no workflows folder exists, set `waitForCI: false` silently.
    - Path to the spec repo (where speckit writes artifacts)
    - Path to the workspace root (where speckit slash commands are available — usually `..` from the project root)
    - GitHub Project column names (show defaults: Todo, Refinement, Ready, In Progress, Done — let user confirm or override each)
