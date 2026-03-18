@@ -1,0 +1,43 @@
+{
+  "github": {
+    "owner": "your-org-or-username",
+    "projectNumber": 1,
+    "assignee": "your-github-username"
+  },
+  "repos": [
+    {
+      "name": "my-api",
+      "path": "../my-api",
+      "type": "backend",
+      "testCommand": "npm test",
+      "buildCommand": "npm run build"
+    },
+    {
+      "name": "my-web",
+      "path": "../my-web",
+      "type": "frontend",
+      "testCommand": "npm test",
+      "buildCommand": "npm run build"
+    },
+    {
+      "name": "my-spec",
+      "path": "../my-spec",
+      "type": "spec"
+    }
+  ],
+  "speckit": {
+    "specsDir": "../my-spec",
+    "workspaceDir": ".."
+  },
+  "statuses": {
+    "todo": "Todo",
+    "refinement": "Refinement",
+    "ready": "Ready",
+    "inProgress": "In Progress",
+    "done": "Done"
+  },
+  "models": {
+    "refine": "claude-opus-4-6",
+    "implement": "claude-sonnet-4-6"
+  }
+}

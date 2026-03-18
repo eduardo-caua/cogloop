@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "specpilot config",
+  "description": "Configuration for the specpilot cogloop plugin",
+  "type": "object",
+  "required": ["github", "repos", "speckit", "statuses"],
+  "properties": {
+    "github": {
+      "type": "object",
+      "description": "GitHub connection settings",
+      "required": ["owner", "projectNumber"],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "GitHub org or username that owns the project board"
+        },
+        "projectNumber": {
+          "type": "number",
+          "description": "GitHub Project number (from the project URL)"
+        },
+        "assignee": {
+          "type": "string",
+          "description": "Optional: only pick tickets assigned to this GitHub username"
+        }
+      }
+    },
+    "repos": {
+      "type": "array",
+      "description": "Repos involved in the workflow",
+      "items": {
+        "type": "object",
+        "required": ["name", "path", "type"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Repo name (used in PR titles and comments)"
+          },
+          "path": {
+            "type": "string",
+            "description": "Relative path to the repo from the project root"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["frontend", "backend", "spec"],
+            "description": "frontend/backend repos get implemented; spec repo gets the speckit artifacts"
+          },
+          "testCommand": {
+            "type": "string",
+            "description": "Command to run tests (e.g. 'npm test'). Required for frontend/backend."
+          },
+          "buildCommand": {
+            "type": "string",
+            "description": "Command to run build (e.g. 'npm run build'). Required for frontend/backend."
+          }
+        }
+      }
+    },
+    "speckit": {
+      "type": "object",
+      "description": "speckit configuration",
+      "required": ["specsDir", "workspaceDir"],
+      "properties": {
+        "specsDir": {
+          "type": "string",
+          "description": "Relative path to the spec repo (where speckit writes artifacts)"
+        },
+        "workspaceDir": {
+          "type": "string",
+          "description": "Relative path to the workspace root (where speckit slash commands are available)"
+        }
+      }
+    },
+    "statuses": {
+      "type": "object",
+      "description": "GitHub Project column names — must match exactly",
+      "required": ["todo", "refinement", "ready", "inProgress", "done"],
+      "properties": {
+        "todo": { "type": "string", "default": "Todo" },
+        "refinement": { "type": "string", "default": "Refinement" },
+        "ready": { "type": "string", "default": "Ready" },
+        "inProgress": { "type": "string", "default": "In Progress" },
+        "done": { "type": "string", "default": "Done" }
+      }
+    },
+    "models": {
+      "type": "object",
+      "description": "Claude model overrides per phase",
+      "properties": {
+        "refine": {
+          "type": "string",
+          "description": "Model for refine phase (default: claude-opus-4-6)",
+          "default": "claude-opus-4-6"
+        },
+        "implement": {
+          "type": "string",
+          "description": "Model for implement phase (default: claude-sonnet-4-6)",
+          "default": "claude-sonnet-4-6"
+        }
+      }
+    }
+  }
+}
