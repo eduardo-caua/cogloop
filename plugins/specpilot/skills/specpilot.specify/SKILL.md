@@ -55,20 +55,23 @@ Read the generated `spec.md` and `tasks.md`. Extract:
 
 ### 4. Create the GitHub ticket
 - If `--dry-run`, print the ticket title, body, and subtasks — stop here
-- Create the issue: `gh issue create --repo <owner>/<repo> --title "<title>" --body "<body>"`
-- For each subtask, create a sub-issue or append a task list to the issue body
-- Add the issue to the GitHub Project board in the **Ready** column directly (skipping To do → Refinement since speckit already ran)
+- Create the ticket directly on the project board as a draft issue:
+  `gh project item-create <projectNumber> --owner <owner> --title "<title>" --body "<body>" --format json`
+  This returns the item ID needed for status updates.
+- For each subtask, append a task list checkbox (`- [ ] ...`) to the item body
+- Set the ticket status to **Ready** (use `config.statuses.ready`):
+  `gh project item-edit --project-id <projectId> --id <itemId> --field-id <statusFieldId> --single-select-option-id <readyOptionId>`
+- **Important**: use `config.github.owner` for the `--owner` flag, NOT the current user's login. The project belongs to the org/owner, not the individual user.
 
-### 5. Push spec branch and link to ticket
+### 5. Push spec branch
 In the spec location (`speckit.specsDir`):
 - The branch was created by speckit during specify (e.g. `013-feature-name`)
 - `git push origin <branch>`
-- If spec is a separate repo: `gh pr create --title "<ticket title>" --body "Spec for #<issue-number>"`
-- Add the spec PR/branch link as a comment on the GitHub Issue
+- If spec is a separate repo: `gh pr create --title "<ticket title>" --body "Spec for <ticket title>"`
 
 ### 6. Done
 Print:
-- Ticket created: `<owner>/<repo>#<number>` — `<title>`
+- Ticket created on project board: `<owner>#<projectNumber>` — `<title>`
 - Spec branch: `<branch-name>`
 - Subtasks: N tasks added
 - Next step: run `/specpilot.implement` to build it

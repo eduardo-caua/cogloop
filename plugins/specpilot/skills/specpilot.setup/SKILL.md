@@ -18,12 +18,10 @@ Run these checks silently before anything else:
 1. **gh CLI authenticated** — run `gh auth status`. If not authenticated, stop:
    > "Please run `gh auth login` first, then re-run `/specpilot.setup`."
 
-2. **speckit installed** — check that the following skills are available in this session:
-   `speckit.constitution`, `speckit.specify`, `speckit.clarify`, `speckit.plan`, `speckit.tasks`
+2. **speckit commands available** — check that the following slash commands are available in this session (listed in the system-reminder's available skills):
+   `/speckit.constitution`, `/speckit.specify`, `/speckit.clarify`, `/speckit.plan`, `/speckit.tasks`
    If any are missing, stop:
-   > "speckit is required but not installed. Install it first:
-   > `claude plugin marketplace add github:anthropics/speckit`
-   > Then re-run `/specpilot.setup`."
+   > "speckit commands are required but not available in this session. Make sure the speckit skills are installed as custom slash commands in your Claude Code configuration, then restart the session and re-run `/specpilot.setup`."
 
 3. **Create `.claude/commands/`** if it doesn't exist.
 

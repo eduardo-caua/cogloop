@@ -77,10 +77,15 @@ For each feature repo with changes:
 ### 8. Wait for CI
 For each open PR:
 - If `waitForCI: false` → skip, proceed to merge
-- If `waitForCI: true` → poll `gh pr checks` until all checks pass (timeout: 30 min)
-  - If checks fail → attempt to fix and push again (up to 2 attempts)
-  - If no checks reported → treat as pass and continue
-  - If still running after timeout → ask: *"Wait longer or merge anyway?"*
+- If `waitForCI: true` → actively monitor CI status:
+  1. Run `gh pr checks <pr-number> --repo <owner>/<repo>` to get the current status
+  2. If all checks pass → proceed to merge
+  3. If any check fails → attempt to fix the code and push again (up to 2 attempts)
+  4. If checks are still pending/in progress → tell the user the current status, wait 30 seconds, then check again. Repeat this loop up to 60 times (30 min total).
+  5. If no checks are reported after the first poll → treat as pass and continue
+  6. If still running after 30 min → ask: *"CI is still running. Wait longer or merge anyway?"*
+
+  **Do NOT stop or hang after pushing.** You must actively run the `gh pr checks` command repeatedly until you get a definitive result (pass or fail).
 
 ### 9. Merge all PRs
 Merge feature repos first, then spec location last:
