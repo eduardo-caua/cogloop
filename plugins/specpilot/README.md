@@ -25,11 +25,13 @@ Todo → Refinement → Ready → In Progress → Done
 
 ### `/refine`
 1. Picks the next ticket from **Todo**, moves it to **Refinement**
-2. Runs `speckit.specify` → `speckit.clarify` → `speckit.plan` → `speckit.tasks` in one session
-3. Surfaces clarify questions to you directly in chat — no terminal blocking
-4. Pushes the spec branch, opens a PR (if spec is a separate repo)
-5. Moves ticket to **Ready**
-6. Asks: *"Refine next ticket?"*
+2. **Classifies** the ticket as a feature or bug (by labels, keywords, and description structure)
+3. **If feature**: runs `speckit.specify` → `speckit.clarify` → `speckit.plan` → `speckit.tasks` in one session
+4. **If bug**: matches it to the correct existing spec, appends bug entry + plan + tasks to that spec (no new spec folder created)
+5. Surfaces clarify questions to you directly in chat — no terminal blocking
+6. Pushes the spec branch (feature) or commits to main (bug), opens a PR if needed
+7. Moves ticket to **Ready**
+8. Asks: *"Refine next ticket?"*
 
 ### `/implement`
 1. Picks the next ticket from **Ready**, moves it to **In Progress**
@@ -183,9 +185,10 @@ The default folder name is `spec/`. For separate repos, the convention is `<proj
 /specpilot.refine --once       # Refine one ticket then stop
 /specpilot.refine --dry-run    # Show which ticket would be picked, do nothing
 
-# Spec-first: start from an idea, create the ticket
-/specpilot.specify                        # Describe a feature, create ticket in Ready
-/specpilot.specify "add dark mode"        # Pass description inline
+# Spec-first: start from an idea or bug report, create the ticket
+/specpilot.specify                        # Describe a feature or bug, create ticket in Ready
+/specpilot.specify "add dark mode"        # Feature — creates new spec + ticket
+/specpilot.specify "login crashes on iOS" # Bug — routes to existing spec + creates [BUG] ticket
 /specpilot.specify --dry-run              # Preview ticket without creating it
 
 # Implement: works with tickets from either flow
@@ -194,6 +197,24 @@ The default folder name is `spec/`. For separate repos, the convention is `<proj
 /specpilot.implement --dry-run    # Show which ticket would be picked, do nothing
 /specpilot.implement --from test  # Resume from the test step
 ```
+
+## Bug routing
+
+Both `/refine` and `/specify` automatically detect when a ticket or description is a **bug** (vs. a new feature) and route it to the correct existing spec instead of creating a new spec folder.
+
+**How it works:**
+
+1. **Classification** — checks labels, keywords ("fix", "bug", "broken", etc.), and description structure (expected vs actual behavior)
+2. **Spec matching** — reads all existing `spec.md` files and matches the bug to the spec that owns the affected area
+3. **User confirmation** — presents the match and asks for confirmation before proceeding
+4. **Append, not create** — adds a bug entry (with ID, priority, symptom, fix, acceptance scenarios) to the matched spec's `spec.md`, then optionally updates `plan.md` and `tasks.md`
+
+This prevents spec proliferation — bugs stay with their parent feature, making the spec directory a clean map of the system rather than a growing list of one-off fixes.
+
+**Ticket format for bugs:**
+- Labeled with `bug` (created automatically if the label doesn't exist in the repo)
+- Clean title — no `[BUG]` prefix needed when the label is present. Falls back to `[BUG]` prefix only if labeling fails (e.g. permissions)
+- Body references the parent spec and bug ID (e.g. `BUG-R09`)
 
 ## Requirements
 

@@ -35,7 +35,61 @@ Identify:
 - Move the ticket to the **Refinement** column
 - Assign the ticket to `config.github.assignee` using `gh project item-edit` with the assignee field (if `assignee` is set in config)
 
-### 2. Run speckit in one session
+### 2. Classify: feature or bug
+Read the ticket title and body. Determine whether the ticket describes:
+
+- **Feature** — a new capability, enhancement, or significant change that needs its own spec
+- **Bug** — a defect, regression, or incorrect behavior in an existing feature
+
+**Classification signals** (check in order):
+1. GitHub label: if the ticket has a `bug` label → **Bug**
+2. Title keywords: "fix", "bug", "broken", "crash", "error", "regression", "doesn't work", "not working" → likely **Bug**
+3. Body structure: references existing behavior that is wrong, describes expected vs actual → likely **Bug**
+4. If ambiguous, default to **Feature**
+
+**If Bug** → go to Step 2b (Bug routing)
+**If Feature** → go to Step 3 (Run speckit — full pipeline)
+
+### 2b. Bug routing — find the parent spec
+Bugs belong in existing specs, not in new spec folders. Route the bug to the correct parent spec:
+
+1. **List existing specs**: Read all `spec.md` files in the specs directory (`speckit.specsDir`). For each spec, note:
+   - Spec number and name (from folder name, e.g. `005-recurrent-transactions`)
+   - Overview/title (first heading in `spec.md`)
+   - Key entities and modules mentioned
+
+2. **Match the bug to a spec**: Compare the ticket description against each spec's scope. Look for:
+   - Referenced files, modules, or components that match a spec's affected area
+   - Feature names or domain concepts that align with a spec
+   - If the ticket mentions specific functionality, match it to the spec that implemented it
+
+3. **Confirm with user**: Present the match:
+   > *"This looks like a bug in **[spec name]**. I'll add it to `[spec-folder]/spec.md` as a bug fix entry. Correct?"*
+   - If user confirms → continue
+   - If user says different spec → use that one
+   - If user says "new spec" → fall through to Step 3 (Feature flow)
+
+4. **Write the bug into the existing spec**: Append to the "Bug Fixes" section of the matched `spec.md`:
+   - Assign the next bug ID following the spec's existing pattern (e.g. `BUG-R09`, `BUG-047`)
+   - Include: priority, affected files (if known), symptom, fix approach, acceptance scenarios
+   - Follow the same format as existing bugs in that spec
+
+5. **Update the plan**: If `plan.md` exists for the matched spec, append a bug fix design section with root cause analysis and fix strategy. If the bug is simple enough (clear fix, no design decisions), this step can be skipped.
+
+6. **Update tasks**: If `tasks.md` exists for the matched spec, append a new phase with implementation tasks for the bug fix. Follow the existing task format (task IDs, file paths, test tasks).
+
+7. **Label the ticket as a bug**: Apply the `bug` label to the existing GitHub issue:
+   - First, check if the `bug` label exists in the repo: `gh label list --repo <owner>/<repo> --json name`
+   - If it doesn't exist, create it: `gh label create bug --repo <owner>/<repo> --color "d73a4a" --description "Something isn't working"`
+   - Add the label: `gh issue edit <issue-number> --repo <owner>/<repo> --add-label "bug"`
+   - Do NOT add a `[BUG]` prefix to the title — the label is the canonical marker
+
+8. **Skip spec branch creation**: Since the bug is added to an existing spec, do NOT create a new spec branch. Instead:
+   - Commit the changes to the existing spec files on the current branch (or main)
+   - Push the changes
+   - Go to Step 4 (Move ticket to Ready)
+
+### 3. Run speckit — full pipeline (Feature flow)
 Run all four speckit commands sequentially from `speckit.workspaceDir`.
 
 **specify** → Read the ticket title and body from GitHub. Run `/speckit.specify` passing the full ticket description as input.
@@ -51,7 +105,7 @@ Run all four speckit commands sequentially from `speckit.workspaceDir`.
 
 **tasks** → Run `/speckit.tasks`
 
-### 3. Push spec branch and open PR
+### 3b. Push spec branch and open PR (Feature flow only)
 In the spec location (`speckit.specsDir`):
 - The branch was created by speckit during specify (e.g. `012-feature-name`)
 - `git push origin <branch>`
@@ -70,3 +124,4 @@ In the spec location (`speckit.specsDir`):
 ## Error handling
 - If speckit fails at any step, report the error and stop — do not move to Ready
 - If the spec branch already exists, pull latest and continue from the last completed step
+- If no matching spec is found for a bug, ask the user which spec to use or whether to create a new one
