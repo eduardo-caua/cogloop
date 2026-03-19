@@ -98,18 +98,23 @@ Read the generated `spec.md` and `tasks.md`. Extract:
 - **Body** — a summary of what this feature does (2–4 sentences from spec.md)
 - **Subtasks** — each top-level task from `tasks.md` becomes a GitHub sub-issue or task checklist item
 
-### 4. Resolve project title
-Both feature and bug flows need the project **title** (not number) for `gh issue create --project`.
-- Resolve it once: `gh project list --owner <owner> --format json`, then find the project whose `number` matches `config.github.projectNumber` and extract its `title`
-- Cache the title for the rest of this run
+### 4. Resolve project ID and status field
+Both feature and bug flows need the project ID and status field for setting ticket status.
+- Resolve project ID: `gh project list --owner <owner> --format json`, find the project whose `number` matches `config.github.projectNumber`, extract its `id`
+- Resolve status field: `gh project field-list <projectNumber> --owner <owner> --format json`, find the field named `Status`, extract its `id` and the option IDs for each status value
+- Cache these for the rest of this run
 
 ### 4a. Create the GitHub ticket (Feature flow)
 - If `--dry-run`, print the ticket title, body, and subtasks — stop here
 - Determine the target repo: use the first `role: "feature"` repo from config. If none, use the spec repo.
-- Create a real issue linked to the project:
-  `gh issue create --repo <owner>/<repo> --title "<title>" --body "<body>" --project "<project title>"`
+- **Create the issue** (without `--project` — linking is done separately to avoid issues with special characters in project titles):
+  `gh issue create --repo <owner>/<repo> --title "<title>" --body "<body>"`
+  This returns the issue URL.
 - For each subtask, append a task list checkbox (`- [ ] ...`) to the issue body
-- Set the ticket status to **Ready** (use `config.statuses.ready`):
+- **Add the issue to the project**:
+  `gh project item-add <projectNumber> --owner <owner> --url <issue-url> --format json`
+  This returns the item ID needed for status updates.
+- **Set the ticket status to Ready**:
   `gh project item-edit --project-id <projectId> --id <itemId> --field-id <statusFieldId> --single-select-option-id <readyOptionId>`
 - **Important**: use `config.github.owner` for the `--owner` flag, NOT the current user's login. The project belongs to the org/owner, not the individual user.
 
@@ -119,12 +124,15 @@ Both feature and bug flows need the project **title** (not number) for `gh issue
 - **Ensure the `bug` label exists** in the target repo:
   - Check: `gh label list --repo <owner>/<repo> --json name`
   - If `bug` label is missing, create it: `gh label create bug --repo <owner>/<repo> --color "d73a4a" --description "Something isn't working"`
-- **Create a real issue with label and project linked**:
-  `gh issue create --repo <owner>/<repo> --title "<short description>" --body "<body>" --label "bug" --project "<project title>"`
+- **Create the issue with the bug label** (without `--project`):
+  `gh issue create --repo <owner>/<repo> --title "<short description>" --body "<body>" --label "bug"`
   - **Title**: Use a clean title — do NOT add a `[BUG]` prefix. The `bug` label is the canonical marker.
   - **Body**: Bug description, affected spec reference (`Part of spec: [spec-name]`), and the bug ID assigned in the spec (e.g. `BUG-R09`)
 - If `gh issue create` with `--label` fails (e.g. permissions), fall back to creating without label and add `[BUG]` prefix to the title instead
-- Set the ticket status to **Ready** (use `config.statuses.ready`)
+- **Add the issue to the project**:
+  `gh project item-add <projectNumber> --owner <owner> --url <issue-url> --format json`
+- **Set the ticket status to Ready**:
+  `gh project item-edit --project-id <projectId> --id <itemId> --field-id <statusFieldId> --single-select-option-id <readyOptionId>`
 - **Important**: use `config.github.owner` for the `--owner` flag
 
 ### 5. Push changes
