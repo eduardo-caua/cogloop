@@ -10,7 +10,7 @@
     {
       "name": "specpilot",
       "description": "Spec-driven development loop: refine tickets into specs, implement and ship — all from Claude Code chat",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": {
         "name": "Eduardo Caua",
         "url": "https://github.com/eduardo-caua"
