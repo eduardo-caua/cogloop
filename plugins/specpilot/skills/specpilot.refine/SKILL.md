@@ -53,8 +53,9 @@ Read the ticket title and body. Determine whether the ticket describes:
 ### 2b. Bug routing — find the parent spec
 Bugs belong in existing specs, not in new spec folders. Route the bug to the correct parent spec:
 
-1. **List existing specs**: Read all `spec.md` files in the specs directory (`speckit.specsDir`). For each spec, note:
+1. **List existing specs**: Read all `spec.md` files in the specs directory (`speckit.specsDir`), scanning recursively to support both flat structures (`specsDir/005-foo/spec.md`) and app subfolders (`specsDir/member/005-foo/spec.md`). For each spec, note:
    - Spec number and name (from folder name, e.g. `005-recurrent-transactions`)
+   - App subfolder (if nested, e.g. `member`)
    - Overview/title (first heading in `spec.md`)
    - Key entities and modules mentioned
 
@@ -92,7 +93,11 @@ Bugs belong in existing specs, not in new spec folders. Route the bug to the cor
 ### 3. Run speckit — full pipeline (Feature flow)
 Run all four speckit commands sequentially from `speckit.workspaceDir`.
 
-**specify** → Read the ticket title and body from GitHub. Run `/speckit.specify` passing the full ticket description as input.
+**App subfolder detection** → Before running specify, check if `speckit.specsDir` contains app subfolders (directories like `member/`, `admin/` that themselves contain numbered spec folders). If multiple app subfolders exist, ask the user which app this feature targets:
+> *"I found multiple app folders in specs: **member**, **admin**. Which app is this feature for?"*
+Store the chosen app name for passing to the create-new-feature script via `-App <name>`.
+
+**specify** → Read the ticket title and body from GitHub. Run `/speckit.specify` passing the full ticket description as input. If an app subfolder was selected, the create-new-feature script will receive the `-App` parameter to create the spec in the correct subfolder.
 
 **clarify** → Run `/speckit.clarify`. When clarify has questions:
 - Do NOT block waiting for terminal input

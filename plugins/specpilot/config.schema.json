@@ -72,7 +72,7 @@
       "properties": {
         "specsDir": {
           "type": "string",
-          "description": "Path to the spec directory — either a separate repo (e.g. '../my-spec') or a folder inside the project (e.g. './spec'). speckit writes all artifacts here."
+          "description": "Path to the spec directory — either a separate repo (e.g. '../my-spec') or a folder inside the project (e.g. './spec'). speckit writes all artifacts here. May contain app subfolders (e.g. 'member/', 'admin/') for multi-app projects; specpilot detects these automatically."
         },
         "workspaceDir": {
           "type": "string",

@@ -57,6 +57,7 @@ Detect silently:
 
 **Spec location:**
 - Look for `spec-kit/`, `spec/`, or a sibling `*-spec` repo at `../`
+- Check if the spec location contains app subfolders (directories like `member/`, `admin/` that themselves contain numbered spec folders like `001-*`). If found, list them as detected app subfolders.
 - Default `workspaceDir` to `.`; use `..` if `../CLAUDE.md` exists
 
 **Repos:**
@@ -85,6 +86,7 @@ I detected this is an existing project. Here's what I found — let me know if a
 
 **Spec**
 - Location: `./spec-kit` (folder inside this project)
+- App subfolders: `member`, `admin` (if detected; omit line if flat structure)
 - speckit runs from: `.` (project root)
 
 **Repos**

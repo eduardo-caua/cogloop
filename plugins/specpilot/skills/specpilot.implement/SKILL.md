@@ -40,6 +40,7 @@ From config, identify:
 ### 2. Read spec
 - Find the open PR (or branch) in the spec location for this ticket (e.g. branch `012-feature-name`)
 - Check out that branch in the spec location
+- Locate the spec directory: check both the root of specsDir and any app subfolders (e.g. `specsDir/member/012-feature-name/`, `specsDir/012-feature-name/`). Use whichever location contains the spec files.
 - Read `spec.md`, `plan.md`, and `tasks.md`
 - The spec location is **read-only** at this stage — do not commit yet
 
