@@ -27,11 +27,13 @@ Identify:
 - `speckit.workspaceDir` → where speckit slash commands run from
 
 ### 1. Pick ticket
+- **Always fetch fresh**: Run the `gh project item-list` command every time this step is reached — including when looping back from Step 5. NEVER reuse a previously fetched ticket list.
 - Query the GitHub Project for the next ticket in the **To do** column: `gh project item-list <projectNumber> --owner <owner> --format json`
 - Filter items where `status` exactly matches `config.statuses.todo` (read from `.specpilot.json` — do NOT hardcode "Todo" or any other string; the actual value may contain spaces, e.g. "To do")
 - If `assignee` is set in config, additionally filter by that assignee
 - If no tickets found, say "No tickets in To do. All done!" and stop
 - If `--dry-run`, print the ticket title and stop
+- **Re-read the ticket**: After selecting the ticket, fetch its title and body fresh via `gh issue view <number> --repo <owner>/<repo> --json title,body,labels`. Do NOT rely on the `item-list` summary — the ticket may have been updated.
 - Move the ticket to the **Refinement** column
 - Assign the ticket to `config.github.assignee` using `gh project item-edit` with the assignee field (if `assignee` is set in config)
 
@@ -85,10 +87,15 @@ Bugs belong in existing specs, not in new spec folders. Route the bug to the cor
    - Add the label: `gh issue edit <issue-number> --repo <owner>/<repo> --add-label "bug"`
    - Do NOT add a `[BUG]` prefix to the title — the label is the canonical marker
 
-8. **Skip spec branch creation**: Since the bug is added to an existing spec, do NOT create a new spec branch. Instead:
-   - Commit the changes to the existing spec files on the current branch (or main)
-   - Push the changes
+8. **Push spec branch and open PR**: Create a branch, commit, push, and open a PR — same as features:
+   - `git checkout -b bugfix/<BUG-ID>-<short-description>` (e.g. `bugfix/BUG-D01-monthly-summary-overflow`)
+   - `git add` the changed spec files and `git commit -m "<ticket title>"`
+   - `git push origin <branch-name>`
+   - If spec is a separate repo: `gh pr create --title "<ticket title>" --body "Bug fix spec for <ticket title>"`
+   - Add the spec PR/branch link as a comment on the GitHub Issue
    - Go to Step 4 (Move ticket to Ready)
+
+   **Exception**: Only push directly to main if the user explicitly asks for it.
 
 ### 3. Run speckit — full pipeline (Feature flow)
 Run all four speckit commands sequentially from `speckit.workspaceDir`.
@@ -124,7 +131,7 @@ In the spec location (`speckit.specsDir`):
 ### 5. Continue or stop
 - If `--once`, stop
 - Otherwise ask: *"Refine next ticket? (yes/no)"*
-- If yes, go to Step 1. If no, stop.
+- If yes, go to Step 1. **Important**: you MUST re-query the project board from scratch in Step 1 — do NOT reuse any previously fetched ticket list or ticket data. If no, stop.
 
 ## Error handling
 - If speckit fails at any step, report the error and stop — do not move to Ready

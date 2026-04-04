@@ -75,7 +75,19 @@ For each feature repo with changes:
 - `git push origin <branch-name>`
 - `gh pr create --title "<ticket title>" --body "Closes #<issue-number>"`
 
-### 8. Wait for CI
+### 8. Confirm testing approach
+PRs are now open. Ask the user before proceeding:
+
+> *"PRs are ready. Would you like to:*
+> *1. Test it yourself first (I'll wait)*
+> *2. I'll test it for you using Playwright*
+> *3. Proceed directly to CI check and merge"*
+
+- **Option 1**: Wait for the user to confirm testing is done, then proceed to Step 9.
+- **Option 2**: Use Playwright MCP tools to test the changes against the running app. Report results. If tests fail, fix and re-push (up to 2 attempts). When done, proceed to Step 9.
+- **Option 3**: Proceed to Step 9 immediately.
+
+### 9. Wait for CI
 For each open PR:
 - If `waitForCI: false` → skip, proceed to merge
 - If `waitForCI: true` → actively monitor CI status:
@@ -88,13 +100,13 @@ For each open PR:
 
   **Do NOT stop or hang after pushing.** You must actively run the `gh pr checks` command repeatedly until you get a definitive result (pass or fail).
 
-### 9. Merge all PRs
+### 10. Merge all PRs
 Merge feature repos first, then spec location last:
 - `gh pr merge <number> --squash --delete-branch`
 
 If spec is a folder inside the project (not a separate repo), commit and push directly to main instead.
 
-### 10. Add comment to issue
+### 11. Add comment to issue
 Post a comment on the GitHub Issue:
 ```
 PRs merged:
@@ -102,11 +114,11 @@ PRs merged:
 - [spec-repo#N](url)
 ```
 
-### 11. Move ticket to Done
+### 12. Move ticket to Done
 - Update ticket status to the value of `config.statuses.done` in the GitHub Project
 - Ensure `config.github.assignee` is still assigned to the ticket
 
-### 12. Continue or stop
+### 13. Continue or stop
 - If `--once`, stop
 - Otherwise ask: *"Implement next ticket? (yes/no)"*
 - If yes, go to Step 1. If no, stop.
